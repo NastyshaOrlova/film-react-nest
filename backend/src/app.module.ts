@@ -21,8 +21,11 @@ import { OrderModule } from './order/order.module';
       inject: [ConfigService],
     }),
     ServeStaticModule.forRoot({
-      rootPath: path.join(__dirname, '..', 'public'),
+      rootPath: path.join(__dirname, 'content'),
       serveRoot: '/content',
+      serveStaticOptions: {
+        index: false,
+      },
     }),
     FilmsModule,
     OrderModule,
