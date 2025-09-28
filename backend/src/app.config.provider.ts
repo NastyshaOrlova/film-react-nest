@@ -4,7 +4,10 @@ export const configProvider = {
   imports: [ConfigModule.forRoot()],
   provide: 'CONFIG',
   useValue: <AppConfig>{
-    //TODO прочесть переменнные среды
+    database: {
+      driver: 'mongodb',
+      url: process.env.DATABASE_URL,
+    },
   },
 };
 
