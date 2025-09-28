@@ -10,15 +10,15 @@ export class OrderController {
   async createOrder(
     @Body() orderData: CreateOrderDto[],
   ): Promise<OrderResponseDto> {
-    // Заглушка
-    const createdOrders = orderData.map((order, index) => ({
-      ...order,
-      id: `order_${Date.now()}_${index}`,
-    }));
+    try {
+      const createdOrders = await this.orderService.createOrder(orderData);
 
-    return {
-      total: createdOrders.length,
-      items: createdOrders,
-    };
+      return {
+        total: createdOrders.length,
+        items: createdOrders,
+      };
+    } catch (error) {
+      throw new Error(`Ошибка при создании заказа: ${error.message}`);
+    }
   }
 }
