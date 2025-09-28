@@ -18,3 +18,10 @@ export class OrderResponseDto {
   total: number;
   items: OrderResultDto[];
 }
+
+// Для полного заказа
+export class CreateFullOrderDto {
+  email: string;
+  phone: string;
+  tickets: CreateOrderDto[];
+}

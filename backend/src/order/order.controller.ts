@@ -1,5 +1,5 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { CreateOrderDto, OrderResponseDto } from './dto/order.dto';
+import { CreateFullOrderDto, OrderResponseDto } from './dto/order.dto';
 import { OrderService } from './order.service';
 
 @Controller('order')
@@ -8,10 +8,12 @@ export class OrderController {
 
   @Post()
   async createOrder(
-    @Body() orderData: CreateOrderDto[],
+    @Body() orderData: CreateFullOrderDto,
   ): Promise<OrderResponseDto> {
     try {
-      const createdOrders = await this.orderService.createOrder(orderData);
+      const createdOrders = await this.orderService.createOrder(
+        orderData.tickets,
+      );
 
       return {
         total: createdOrders.length,
