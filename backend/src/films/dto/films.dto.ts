@@ -1,4 +1,3 @@
-// Для GET /films
 export class FilmDto {
   id: string;
   rating: number;
@@ -11,7 +10,6 @@ export class FilmDto {
   cover: string;
 }
 
-// Для GET /films/:id/schedule
 export class SessionDto {
   id: string;
   daytime: string;
@@ -22,8 +20,20 @@ export class SessionDto {
   taken: string[];
 }
 
-// Обертка для всех ответов
-export class ApiResponseDto<T> {
+export class FilmsListDto {
   total: number;
-  items: T[];
+  items: FilmDto[];
+}
+
+export class FilmWithScheduleDto {
+  id: string;
+  rating: number;
+  director: string;
+  tags: string[];
+  title: string;
+  about: string;
+  description: string;
+  image: string;
+  cover: string;
+  schedule: SessionDto[];
 }
