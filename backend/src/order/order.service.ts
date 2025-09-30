@@ -1,3 +1,4 @@
+// order.service.ts
 import {
   BadRequestException,
   ConflictException,
@@ -17,20 +18,48 @@ export class OrderService {
 
   async createOrder(orderData: CreateOrderDto[]): Promise<OrderResultDto[]> {
     const groupedBySession = this.groupTicketsBySession(orderData);
-    const results: OrderResultDto[] = [];
+    const uniqueFilmIds = Array.from(
+      new Set(orderData.map((ticket) => ticket.film)),
+    );
+
+    const filmsMap = await this.filmsRepository.findByIds(uniqueFilmIds);
+
+    const bookingUpdates: Array<{
+      filmId: string;
+      sessionId: string;
+      seats: string[];
+    }> = [];
 
     for (const [sessionKey, tickets] of groupedBySession.entries()) {
       const [filmId, sessionId] = sessionKey.split('|');
 
-      const bookedTickets = await this.bookSeatsForSession(
+      const film = filmsMap.get(filmId);
+      if (!film) {
+        throw new NotFoundException(`Фильм с id ${filmId} не найден`);
+      }
+
+      const session = film.schedule.find((s) => s.id === sessionId);
+      if (!session) {
+        throw new NotFoundException(
+          `Сеанс с id ${sessionId} для фильма ${filmId} не найден`,
+        );
+      }
+
+      const seatsToBook = tickets.map((t) => `${t.row}:${t.seat}`);
+      this.validateSeatsAvailability(session.taken, seatsToBook);
+
+      bookingUpdates.push({
         filmId,
         sessionId,
-        tickets,
-      );
-      results.push(...bookedTickets);
+        seats: seatsToBook,
+      });
     }
 
-    return results;
+    await this.filmsRepository.bookSeatsInBulk(bookingUpdates);
+    return orderData.map((ticket, index) => ({
+      ...ticket,
+      id: `order_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`,
+    }));
   }
 
   private groupTicketsBySession(
@@ -48,33 +77,6 @@ export class OrderService {
     }
 
     return grouped;
-  }
-
-  private async bookSeatsForSession(
-    filmId: string,
-    sessionId: string,
-    tickets: CreateOrderDto[],
-  ): Promise<OrderResultDto[]> {
-    const session = await this.filmsRepository.findSessionById(
-      filmId,
-      sessionId,
-    );
-
-    if (!session) {
-      throw new NotFoundException(
-        `Сеанс с id ${sessionId} для фильма ${filmId} не найден`,
-      );
-    }
-
-    const seatsToBook = tickets.map((ticket) => `${ticket.row}:${ticket.seat}`);
-    this.validateSeatsAvailability(session.taken, seatsToBook);
-
-    await this.filmsRepository.bookSeats(filmId, sessionId, seatsToBook);
-
-    return tickets.map((ticket, index) => ({
-      ...ticket,
-      id: `order_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`,
-    }));
   }
 
   private validateSeatsAvailability(

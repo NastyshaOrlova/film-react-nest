@@ -54,6 +54,55 @@ export class FilmsMongoRepository implements IFilmsRepository {
     session.taken.push(...seats);
     await film.save();
   }
+  async findByIds(filmIds: string[]): Promise<Map<string, FilmDocument>> {
+    const films = await this.filmModel
+      .find({ id: { $in: filmIds } }) // 👈 Один запрос для всех фильмов!
+      .exec();
+
+    const filmMap = new Map<string, FilmDocument>();
+    films.forEach((film) => {
+      filmMap.set(film.id, film);
+    });
+
+    return filmMap;
+  }
+
+  async bookSeatsInBulk(
+    updates: Array<{ filmId: string; sessionId: string; seats: string[] }>,
+  ): Promise<void> {
+    const filmUpdates = new Map<
+      string,
+      Array<{ sessionId: string; seats: string[] }>
+    >();
+
+    for (const update of updates) {
+      if (!filmUpdates.has(update.filmId)) {
+        filmUpdates.set(update.filmId, []);
+      }
+      filmUpdates.get(update.filmId)!.push({
+        sessionId: update.sessionId,
+        seats: update.seats,
+      });
+    }
+
+    for (const [filmId, sessionUpdates] of filmUpdates.entries()) {
+      const film = await this.filmModel.findOne({ id: filmId }).exec();
+
+      if (!film) {
+        throw new NotFoundException(`Фильм с id ${filmId} не найден`);
+      }
+
+      for (const { sessionId, seats } of sessionUpdates) {
+        const session = film.schedule.find((s) => s.id === sessionId);
+        if (!session) {
+          throw new NotFoundException(`Сеанс с id ${sessionId} не найден`);
+        }
+        session.taken.push(...seats);
+      }
+
+      await film.save();
+    }
+  }
 
   private entityToDto(film: FilmDocument): FilmDto {
     return {
