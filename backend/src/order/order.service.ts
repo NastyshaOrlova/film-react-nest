@@ -1,4 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { IFilmsRepository } from '../repository/films.repository.interface';
 import { CreateOrderDto, OrderResultDto } from './dto/order.dto';
 
@@ -55,7 +61,9 @@ export class OrderService {
     );
 
     if (!session) {
-      throw new Error(`Сеанс с id ${sessionId} для фильма ${filmId} не найден`);
+      throw new NotFoundException(
+        `Сеанс с id ${sessionId} для фильма ${filmId} не найден`,
+      );
     }
 
     const seatsToBook = tickets.map((ticket) => `${ticket.row}:${ticket.seat}`);
@@ -76,13 +84,13 @@ export class OrderService {
     const takenSet = new Set(takenSeats);
     for (const seat of seatsToBook) {
       if (takenSet.has(seat)) {
-        throw new Error(`Место ${seat} уже занято`);
+        throw new ConflictException(`Место ${seat} уже занято`);
       }
     }
 
     const uniqueSeats = new Set(seatsToBook);
     if (uniqueSeats.size !== seatsToBook.length) {
-      throw new Error('В заказе есть дублирующиеся места');
+      throw new BadRequestException('В заказе есть дублирующиеся места');
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { FilmDto, SessionDto } from '../films/dto/films.dto';
@@ -43,12 +43,12 @@ export class FilmsMongoRepository implements IFilmsRepository {
     const film = await this.filmModel.findOne({ id: filmId }).exec();
 
     if (!film) {
-      throw new Error(`Фильм с id ${filmId} не найден`);
+      throw new NotFoundException(`Фильм с id ${filmId} не найден`);
     }
 
     const session = film.schedule.find((s) => s.id === sessionId);
     if (!session) {
-      throw new Error(`Сеанс с id ${sessionId} не найден`);
+      throw new NotFoundException(`Сеанс с id ${sessionId} не найден`);
     }
 
     session.taken.push(...seats);

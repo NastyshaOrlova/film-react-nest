@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { IFilmsRepository } from '../repository/films.repository.interface';
 import { FilmsListDto, FilmWithScheduleDto } from './dto/films.dto';
 
@@ -22,7 +22,7 @@ export class FilmsService {
     const film = await this.filmsRepository.findById(filmId);
 
     if (!film) {
-      return null;
+      throw new NotFoundException(`Фильм с id ${filmId} не найден`);
     }
 
     const schedule = await this.filmsRepository.findScheduleById(filmId);
