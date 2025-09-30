@@ -1,10 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { IFilmsRepository } from '../repository/films.repository.interface';
 import { CreateOrderDto, OrderResultDto } from './dto/order.dto';
 
 @Injectable()
 export class OrderService {
-  constructor(private readonly filmsRepository: IFilmsRepository) {}
+  constructor(
+    @Inject(IFilmsRepository)
+    private readonly filmsRepository: IFilmsRepository,
+  ) {}
 
   async createOrder(orderData: CreateOrderDto[]): Promise<OrderResultDto[]> {
     const groupedBySession = this.groupTicketsBySession(orderData);
