@@ -1,12 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Film, FilmDocument } from '../films/schema/film.schema';
+import { IFilmsRepository } from '../repository/films.repository.interface';
 import { CreateOrderDto, OrderResultDto } from './dto/order.dto';
 
 @Injectable()
 export class OrderService {
-  constructor(@InjectModel(Film.name) private filmModel: Model<FilmDocument>) {}
+  constructor(private readonly filmsRepository: IFilmsRepository) {}
+
   async createOrder(orderData: CreateOrderDto[]): Promise<OrderResultDto[]> {
     const groupedBySession = this.groupTicketsBySession(orderData);
     const results: OrderResultDto[] = [];
@@ -47,22 +46,19 @@ export class OrderService {
     sessionId: string,
     tickets: CreateOrderDto[],
   ): Promise<OrderResultDto[]> {
-    const film = await this.filmModel.findOne({ id: filmId }).exec();
+    const session = await this.filmsRepository.findSessionById(
+      filmId,
+      sessionId,
+    );
 
-    if (!film) {
-      throw new Error(`Фильм с id ${filmId} не найден`);
-    }
-
-    const session = film.schedule.find((s) => s.id === sessionId);
     if (!session) {
-      throw new Error(`Сеанс с id ${sessionId} не найден`);
+      throw new Error(`Сеанс с id ${sessionId} для фильма ${filmId} не найден`);
     }
 
     const seatsToBook = tickets.map((ticket) => `${ticket.row}:${ticket.seat}`);
     this.validateSeatsAvailability(session.taken, seatsToBook);
-    session.taken.push(...seatsToBook);
 
-    await film.save();
+    await this.filmsRepository.bookSeats(filmId, sessionId, seatsToBook);
 
     return tickets.map((ticket, index) => ({
       ...ticket,
@@ -82,7 +78,6 @@ export class OrderService {
     }
 
     const uniqueSeats = new Set(seatsToBook);
-
     if (uniqueSeats.size !== seatsToBook.length) {
       throw new Error('В заказе есть дублирующиеся места');
     }

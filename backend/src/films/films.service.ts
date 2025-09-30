@@ -1,52 +1,32 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { IFilmsRepository } from '../repository/films.repository.interface';
 import { FilmsListDto, FilmWithScheduleDto } from './dto/films.dto';
-import { Film, FilmDocument } from './schema/film.schema';
 
 @Injectable()
 export class FilmsService {
-  constructor(@InjectModel(Film.name) private filmModel: Model<FilmDocument>) {}
+  constructor(private readonly filmsRepository: IFilmsRepository) {}
 
   async findAll(): Promise<FilmsListDto> {
-    const films = await this.filmModel.find().exec();
+    const films = await this.filmsRepository.findAll();
 
     return {
       total: films.length,
-      items: films.map((film) => ({
-        id: film.id,
-        rating: film.rating,
-        director: film.director,
-        tags: film.tags,
-        title: film.title,
-        about: film.about,
-        description: film.description,
-        image: film.image,
-        cover: film.cover,
-      })),
+      items: films,
     };
   }
 
   async findSchedule(filmId: string): Promise<FilmWithScheduleDto | null> {
-    const film = await this.filmModel.findOne({ id: filmId }).exec();
+    const film = await this.filmsRepository.findById(filmId);
 
     if (!film) {
       return null;
     }
 
-    const filmWithSchedule = {
-      id: film.id,
-      rating: film.rating,
-      director: film.director,
-      tags: film.tags,
-      title: film.title,
-      about: film.about,
-      description: film.description,
-      image: film.image,
-      cover: film.cover,
-      schedule: film.schedule,
-    };
+    const schedule = await this.filmsRepository.findScheduleById(filmId);
 
-    return filmWithSchedule;
+    return {
+      ...film,
+      schedule,
+    };
   }
 }

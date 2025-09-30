@@ -24,25 +24,35 @@ export class FilmsMongoRepository implements IFilmsRepository {
     return film ? film.schedule : [];
   }
 
-  async create(filmData: Partial<FilmDto>): Promise<FilmDto> {
-    const entity = this.dtoToEntity(filmData);
-    const created = await this.filmModel.create(entity);
-    return this.entityToDto(created);
+  async findSessionById(
+    filmId: string,
+    sessionId: string,
+  ): Promise<SessionDto | null> {
+    const film = await this.filmModel.findOne({ id: filmId }).exec();
+    if (!film) return null;
+
+    const session = film.schedule.find((s) => s.id === sessionId);
+    return session || null;
   }
 
-  async update(
-    id: string,
-    filmData: Partial<FilmDto>,
-  ): Promise<FilmDto | null> {
-    const updated = await this.filmModel
-      .findOneAndUpdate({ id }, filmData, { new: true })
-      .exec();
-    return updated ? this.entityToDto(updated) : null;
-  }
+  async bookSeats(
+    filmId: string,
+    sessionId: string,
+    seats: string[],
+  ): Promise<void> {
+    const film = await this.filmModel.findOne({ id: filmId }).exec();
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.filmModel.deleteOne({ id }).exec();
-    return result.deletedCount > 0;
+    if (!film) {
+      throw new Error(`Фильм с id ${filmId} не найден`);
+    }
+
+    const session = film.schedule.find((s) => s.id === sessionId);
+    if (!session) {
+      throw new Error(`Сеанс с id ${sessionId} не найден`);
+    }
+
+    session.taken.push(...seats);
+    await film.save();
   }
 
   private entityToDto(film: FilmDocument): FilmDto {
@@ -56,20 +66,6 @@ export class FilmsMongoRepository implements IFilmsRepository {
       description: film.description,
       image: film.image,
       cover: film.cover,
-    };
-  }
-
-  private dtoToEntity(dto: Partial<FilmDto>): Partial<Film> {
-    return {
-      id: dto.id,
-      rating: dto.rating,
-      director: dto.director,
-      tags: dto.tags,
-      title: dto.title,
-      about: dto.about,
-      description: dto.description,
-      image: dto.image,
-      cover: dto.cover,
     };
   }
 }
