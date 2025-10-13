@@ -11,9 +11,13 @@ export interface IFilmsRepository {
     filmId: string,
     sessionId: string,
   ): Promise<SessionDto | null>;
-  bookSeats(filmId: string, sessionId: string, seats: string[]): Promise<void>;
+  bookSeats(
+    filmId: string,
+    sessionId: string,
+    seats: string[],
+  ): Promise<boolean>;
   findByIds(filmIds: string[]): Promise<Map<string, FilmDocument>>;
   bookSeatsInBulk(
     updates: Array<{ filmId: string; sessionId: string; seats: string[] }>,
-  ): Promise<void>;
+  ): Promise<boolean>;
 }

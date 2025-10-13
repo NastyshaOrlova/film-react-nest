@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { FilmDto, SessionDto } from '../films/dto/films.dto';
@@ -39,25 +39,21 @@ export class FilmsMongoRepository implements IFilmsRepository {
     filmId: string,
     sessionId: string,
     seats: string[],
-  ): Promise<void> {
+  ): Promise<boolean> {
     const film = await this.filmModel.findOne({ id: filmId }).exec();
 
-    if (!film) {
-      throw new NotFoundException(`Фильм с id ${filmId} не найден`);
-    }
+    if (!film) return false;
 
     const session = film.schedule.find((s) => s.id === sessionId);
-    if (!session) {
-      throw new NotFoundException(`Сеанс с id ${sessionId} не найден`);
-    }
+    if (!session) return false;
 
     session.taken.push(...seats);
     await film.save();
+    return true;
   }
+
   async findByIds(filmIds: string[]): Promise<Map<string, FilmDocument>> {
-    const films = await this.filmModel
-      .find({ id: { $in: filmIds } }) // 👈 Один запрос для всех фильмов!
-      .exec();
+    const films = await this.filmModel.find({ id: { $in: filmIds } }).exec();
 
     const filmMap = new Map<string, FilmDocument>();
     films.forEach((film) => {
@@ -69,7 +65,7 @@ export class FilmsMongoRepository implements IFilmsRepository {
 
   async bookSeatsInBulk(
     updates: Array<{ filmId: string; sessionId: string; seats: string[] }>,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const filmUpdates = new Map<
       string,
       Array<{ sessionId: string; seats: string[] }>
@@ -88,20 +84,17 @@ export class FilmsMongoRepository implements IFilmsRepository {
     for (const [filmId, sessionUpdates] of filmUpdates.entries()) {
       const film = await this.filmModel.findOne({ id: filmId }).exec();
 
-      if (!film) {
-        throw new NotFoundException(`Фильм с id ${filmId} не найден`);
-      }
+      if (!film) return false;
 
       for (const { sessionId, seats } of sessionUpdates) {
         const session = film.schedule.find((s) => s.id === sessionId);
-        if (!session) {
-          throw new NotFoundException(`Сеанс с id ${sessionId} не найден`);
-        }
+        if (!session) return false;
         session.taken.push(...seats);
       }
 
       await film.save();
     }
+    return true;
   }
 
   private entityToDto(film: FilmDocument): FilmDto {
