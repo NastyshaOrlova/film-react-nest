@@ -13,7 +13,7 @@ export class FilmDto {
 export class SessionDto {
   id: string;
   daytime: string;
-  hall: string;
+  hall: number;
   rows: number;
   seats: number;
   price: number;
@@ -26,14 +26,6 @@ export class FilmsListDto {
 }
 
 export class FilmWithScheduleDto {
-  id: string;
-  rating: number;
-  director: string;
-  tags: string[];
-  title: string;
-  about: string;
-  description: string;
-  image: string;
-  cover: string;
-  schedule: SessionDto[];
+  total: number;
+  items: SessionDto[];
 }
