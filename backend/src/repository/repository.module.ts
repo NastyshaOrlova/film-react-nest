@@ -1,19 +1,28 @@
-import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Film, FilmSchema } from '../films/schema/film.schema';
-import { FilmsMongoRepository } from './films.mongo.repository';
+import { DynamicModule, Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Film as TypeOrmFilm } from '../films/entities/film.entity';
+import { Schedule } from '../films/entities/schedule.entity';
 import { IFilmsRepository } from './films.repository.interface';
+import { FilmsTypeOrmRepository } from './films.typeorm.repository';
 
-@Module({
-  imports: [
-    MongooseModule.forFeature([{ name: Film.name, schema: FilmSchema }]),
-  ],
-  providers: [
-    {
-      provide: IFilmsRepository,
-      useClass: FilmsMongoRepository,
-    },
-  ],
-  exports: [IFilmsRepository],
-})
-export class RepositoryModule {}
+@Module({})
+export class RepositoryModule {
+  static forRoot(): DynamicModule {
+    return {
+      module: RepositoryModule,
+      imports: [
+        ConfigModule,
+        TypeOrmModule.forFeature([TypeOrmFilm, Schedule]),
+      ],
+      providers: [
+        FilmsTypeOrmRepository,
+        {
+          provide: IFilmsRepository,
+          useExisting: FilmsTypeOrmRepository,
+        },
+      ],
+      exports: [IFilmsRepository],
+    };
+  }
+}
