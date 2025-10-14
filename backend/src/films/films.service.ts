@@ -18,7 +18,7 @@ export class FilmsService {
     };
   }
 
-  async findSchedule(filmId: string): Promise<FilmWithScheduleDto | null> {
+  async findSchedule(filmId: string): Promise<FilmWithScheduleDto> {
     const film = await this.filmsRepository.findById(filmId);
 
     if (!film) {
@@ -28,8 +28,8 @@ export class FilmsService {
     const schedule = await this.filmsRepository.findScheduleById(filmId);
 
     return {
-      ...film,
-      schedule,
+      total: schedule.length,
+      items: schedule,
     };
   }
 }

@@ -21,7 +21,10 @@ export class FilmsMongoRepository implements IFilmsRepository {
 
   async findScheduleById(filmId: string): Promise<SessionDto[]> {
     const film = await this.filmModel.findOne({ id: filmId }).exec();
-    return film ? film.schedule : [];
+    if (!film || !film.schedule) {
+      return [];
+    }
+    return film.schedule;
   }
 
   async findSessionById(
