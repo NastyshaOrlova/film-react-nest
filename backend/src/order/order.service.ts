@@ -55,7 +55,13 @@ export class OrderService {
       });
     }
 
-    await this.filmsRepository.bookSeatsInBulk(bookingUpdates);
+    const success = await this.filmsRepository.bookSeatsInBulk(bookingUpdates);
+    if (!success) {
+      throw new NotFoundException(
+        'Не удалось забронировать места: фильм или сеанс не найден',
+      );
+    }
+
     return orderData.map((ticket, index) => ({
       ...ticket,
       id: `order_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`,
