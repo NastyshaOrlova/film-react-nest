@@ -7,26 +7,26 @@ export class JsonLogger implements LoggerService {
   }
 
   log(message: any, ...optionalParams: any[]) {
-    console.log(this.formatMessage('log', message, optionalParams));
+    console.log(this.formatMessage('log', message, ...optionalParams));
   }
 
   error(message: any, ...optionalParams: any[]) {
-    console.log(this.formatMessage('error', message, optionalParams));
+    console.log(this.formatMessage('error', message, ...optionalParams));
   }
 
   warn(message: any, ...optionalParams: any[]) {
-    console.log(this.formatMessage('warn', message, optionalParams));
+    console.log(this.formatMessage('warn', message, ...optionalParams));
   }
 
   debug(message: any, ...optionalParams: any[]) {
-    console.log(this.formatMessage('debug', message, optionalParams));
+    console.log(this.formatMessage('debug', message, ...optionalParams));
   }
 
   verbose(message: any, ...optionalParams: any[]) {
-    console.log(this.formatMessage('verbose', message, optionalParams));
+    console.log(this.formatMessage('verbose', message, ...optionalParams));
   }
 
   fatal(message: any, ...optionalParams: any[]) {
-    console.log(this.formatMessage('fatal', message, optionalParams));
+    console.log(this.formatMessage('fatal', message, ...optionalParams));
   }
 }
