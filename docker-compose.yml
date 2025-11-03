@@ -1,0 +1,106 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: film-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/test/prac.init.sql:/docker-entrypoint-initdb.d/1-init.sql:ro
+      - ./backend/test/prac.films.sql:/docker-entrypoint-initdb.d/2-films.sql:ro
+      - ./backend/test/prac.shedules.sql:/docker-entrypoint-initdb.d/3-schedules.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prac"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - film-network
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: film-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./pgadmin-servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      - postgres
+    networks:
+      - film-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: film-backend:latest
+    container_name: film-backend
+    environment:
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_USERNAME: ${POSTGRES_USER}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_NAME: ${POSTGRES_DB}
+      LOGGER_TYPE: ${LOGGER_TYPE}
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - film-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: film-frontend:latest
+    container_name: film-frontend
+    volumes:
+      - frontend_dist:/app/dist
+    command: sh -c "echo 'Frontend built successfully' && sleep infinity"
+    networks:
+      - film-network
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    image: film-nginx:latest
+    container_name: film-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - frontend_dist:/usr/share/nginx/html:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - film-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+  frontend_dist:
+    driver: local
+
+networks:
+  film-network:
+    driver: bridge
