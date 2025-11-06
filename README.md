@@ -33,8 +33,8 @@ MongoDB должна быть установлена и запущена.
 
 ## Ссылки на проект
 
-**Сайт:** http://film-app.nomorepartiessbs.ru
+**Сайт:** https://film-app.nomorepartiessbs.ru
 
-**API:** http://film-app.nomorepartiessbs.ru/api/afisha/films
+**API:** https://api.film-app.nomorepartiessbs.ru/api/afisha/films
 
 **IP:** 158.160.181.169
