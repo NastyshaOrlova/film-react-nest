@@ -12,9 +12,6 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/test/prac.init.sql:/docker-entrypoint-initdb.d/1-init.sql:ro
-      - ./backend/test/prac.films.sql:/docker-entrypoint-initdb.d/2-films.sql:ro
-      - ./backend/test/prac.shedules.sql:/docker-entrypoint-initdb.d/3-schedules.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U prac"]
       interval: 10s
@@ -43,10 +40,7 @@ services:
     restart: unless-stopped
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    image: film-backend:latest
+    image: ghcr.io/${GITHUB_USERNAME}/film-backend:latest
     container_name: film-backend
     environment:
       DATABASE_HOST: ${DATABASE_HOST}
@@ -65,10 +59,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    image: film-frontend:latest
+    image: ghcr.io/${GITHUB_USERNAME}/film-frontend:latest
     container_name: film-frontend
     volumes:
       - frontend_dist:/app/dist
@@ -77,10 +68,7 @@ services:
       - film-network
 
   nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
-    image: film-nginx:latest
+    image: ghcr.io/${GITHUB_USERNAME}/film-nginx:latest
     container_name: film-nginx
     ports:
       - "80:80"
