@@ -31,6 +31,10 @@ MongoDB должна быть установлена и запущена.
 
 Для проверки отправьте тестовый запрос с помощью Postman или `curl`.
 
+## Ссылки на проект
 
+**Сайт:** https://film-app.nomorepartiessbs.ru
 
+**API:** https://api.film-app.nomorepartiessbs.ru/api/afisha/films
 
+**IP:** 158.160.181.169

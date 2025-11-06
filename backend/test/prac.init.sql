@@ -1,8 +1,4 @@
-create database prac
-    with owner prac;
-
-\c prac
-
+-- База данных уже создаётся через переменную окружения POSTGRES_DB
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 create table public.films

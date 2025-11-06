@@ -1,0 +1,15 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Film Database",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "prac",
+      "Username": "prac",
+      "Password": "prac",
+      "SSLMode": "prefer",
+      "Shared": false
+    }
+  }
+}
